@@ -6,13 +6,13 @@ from .forms import LoginForm,RegisterForm,ForgetPwdForm,ModifyPwdForm,UploadImag
 from django.contrib.auth.hashers import make_password
 from utils.email_send import send_register_email,EmailVerifyRecord
 from django.contrib.auth.backends import  ModelBackend
-from .models import UserProfile
+from .models import UserProfile,Banner
 from operation.models import UserCourse,UserFavorite,UserMessage
 from organization.models import CourseOrg,Teacher
 from course.models import Course
 from django.db.models import Q
 from utils.mixin_utils import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse,HttpResponseRedirect
 from django.core.paginator import PageNotAnInteger
 from pure_pagination import Paginator
 #邮箱和用户名都能登录
@@ -51,7 +51,7 @@ class LoginView(View):
                 if user.is_active:
                     #只有注册激活才能登录
                     login(request,user)
-                    return render(request,'index.html')
+                    return HttpResponseRedirect(reverse('index'))
                 else:
                     return render(request,'login.html',{'msg':'没有激活账号','login_form':login_form})
             #只有当用户名或密码不存在是，才返回错误信息到前端
@@ -183,7 +183,18 @@ class UserinfoView(LoginRequiredMixin,View):
     def post(self, request):
         user_info_form = UserInfoForm(request.POST, instance=request.user)
         if user_info_form.is_valid():
-            user_info_form.save()
+            # user_info_form.save()
+            nick_name = request.POST.get("nick_name", "")
+            gender = request.POST.get("gender", "")
+            birthday = request.POST.get("birthday", "")
+            address = request.POST.get("address", "")
+            mobile = request.POST.get("mobile", "")
+            request.user.image = nick_name
+            request.user.image = gender
+            request.user.image = birthday
+            request.user.image = address
+            request.user.image = mobile
+            request.user.save()
             return HttpResponse('{"status":"success"}', content_type='application/json')
         else:
             return HttpResponse(json.dumps(user_info_form.errors), content_type='application/json')
@@ -250,6 +261,128 @@ class UpdateEmailView(LoginRequiredMixin, View):
             return HttpResponse('{"email":"验证码无效"}', content_type='application/json')
 
 
+class MyCourseView(LoginRequiredMixin, View):
+    '''我的课程'''
+    def get(self, request):
+        user_courses = UserCourse.objects.filter(user=request.user)
+        return render(request, "users/usercenter-mycourse.html", {
+            "user_courses":user_courses,
+        })
 
 
+class MyFavOrgView(LoginRequiredMixin,View):
+    '''我收藏的课程机构'''
+
+    def get(self, request):
+        org_list = []
+        fav_orgs = UserFavorite.objects.filter(user=request.user, fav_type=2)
+        # 上面的fav_orgs只是存放了id。我们还需要通过id找到机构对象
+        for fav_org in fav_orgs:
+            # 取出fav_id也就是机构的id。
+            org_id = fav_org.fav_id
+            # 获取这个机构对象
+            org = CourseOrg.objects.get(id=org_id)
+            org_list.append(org)
+        return render(request, "users/usercenter-fav-org.html", {
+            "org_list": org_list,
+        })
+
+class MyFavTeacherView(LoginRequiredMixin, View):
+    '''我收藏的授课讲师'''
+
+    def get(self, request):
+        teacher_list = []
+        fav_teachers = UserFavorite.objects.filter(user=request.user, fav_type=3)
+        for fav_teacher in fav_teachers:
+            teacher_id = fav_teacher.fav_id
+            teacher = Teacher.objects.get(id=teacher_id)
+            teacher_list.append(teacher)
+        return render(request, "users/usercenter-fav-teacher.html", {
+            "teacher_list": teacher_list,
+        })
+
+class MyFavCourseView(LoginRequiredMixin,View):
+    """
+    我收藏的课程
+    """
+    def get(self, request):
+        course_list = []
+        fav_courses = UserFavorite.objects.filter(user=request.user, fav_type=1)
+        for fav_course in fav_courses:
+            course_id = fav_course.fav_id
+            course = Course.objects.get(id=course_id)
+            course_list.append(course)
+
+        return render(request, 'users/usercenter-fav-course.html', {
+            "course_list":course_list,
+        })
+
+class MyMessageView(LoginRequiredMixin, View):
+    '''我的消息'''
+
+    def get(self, request):
+        all_message = UserMessage.objects.filter(user= request.user.id)
+
+        try:
+            page = request.GET.get('page', 1)
+        except PageNotAnInteger:
+            page = 1
+        p = Paginator(all_message, 4,request=request)
+        messages = p.page(page)
+        return  render(request, "users/usercenter-message.html", {
+        "messages":messages,
+        })
+
+
+class IndexView(View):
+    '''首页'''
+    def get(self,request):
+        #轮播图
+        all_banners = Banner.objects.all().order_by('index')
+        #课程
+        courses = Course.objects.filter(is_banner=False)[:6]
+        #轮播课程
+        banner_courses = Course.objects.filter(is_banner=True)[:3]
+        #课程机构
+        course_orgs = Course.objects.all()[:15]
+        return render(request,'index.html',{
+            'all_banners':all_banners,
+            'courses':courses,
+            'banner_courses':banner_courses,
+            'course_orgs':course_orgs,
+        })
+
+from django.shortcuts import render_to_response
+def pag_not_found(request):
+    # 全局404处理函数
+    response = render_to_response('teacher/404.html', {})
+    response.status_code = 404
+    return response
+
+def page_error(request):
+    # 全局500处理函数
+    from django.shortcuts import render_to_response
+    response = render_to_response('teacher/500.html', {})
+    response.status_code = 500
+    return response
+
+
+
+class LoginUnsafeView(View):
+    def get(self, request):
+        return render(request, "login.html", {})
+    def post(self, request):
+        user_name = request.POST.get("username", "")
+        pass_word = request.POST.get("password", "")
+
+        import MySQLdb
+        conn = MySQLdb.connect(host='127.0.0.1', user='root', passwd='root', db='qq_online', charset='utf8')
+        cursor = conn.cursor()
+        sql_select = "select * from users_userprofile where email='{0}' and password='{1}'".format(user_name, pass_word)
+
+        result = cursor.execute(sql_select)
+        for row in cursor.fetchall():
+            # 查询到用户
+            pass
+        print ('test')
 

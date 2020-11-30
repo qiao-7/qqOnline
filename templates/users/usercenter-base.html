@@ -28,37 +28,41 @@
     <header>
         <div  class="header2 header">
              <div class="top">
-                <div class="wp">
-                    <div class="fl"><p>服务电话：<b>33333333</b></p></div>
-                    <!--登录后跳转-->
-
-
-                        <div class="personal">
+                {% if request.user.is_authenticated %}
+                <div class="personal">
                             <dl class="user fr">
-                                <dd>{{ request.user.email }}<img class="down fr" src="/static/images/top_down.png"/></dd>
+                                <dd>{{ request.user.username }}<img width="20px" height="20px" class="down fr" src="/static/images/top_down.png"></dd>
                                 <dt><img width="20" height="20" src="{{ MEDIA_URL }}{{ request.user.image }}"/></dt>
                             </dl>
                             <div class="userdetail">
-                                <dl>
-                                    <dt><img width="80" height="80" src="{{ MEDIA_URL }}{{ request.user.image }}"/></dt>
-                                    <dd>
-                                        <h2>{{ request.user.username }}</h2>
-                                        <p>{{ request.user.nick_name }}</p>
-                                    </dd>
+                            	<dl>
+	                                <dt><img width="80" height="80" src="{{ MEDIA_URL }}{{ request.user.image }}"/></dt>
+	                                <dd>
+	                                    <h2>{{ request.user.nick_name }}</h2>
+	                                    <p>{{ request.user.username }}</p>
+	                                </dd>
                                 </dl>
                                 <div class="btn">
-                                    <a class="personcenter fl" href="{% url 'users:user_info' %}">进入个人中心</a>
-                                    <a class="fr" href="{% url 'logout' %}">退出</a>
+	                                <a class="personcenter fl" href="{% url 'users:user_info' %}">进入个人中心</a>
+	                                <a class="fr" href="{% url 'logout' %}">退出</a>
                                 </div>
                             </div>
                         </div>
-                        <a href="#">
-                            <div class="msg-num"><span id="MsgNum">0</span></div>
-                        </a>
+                {% else %}
+                    <div class="wp">
+					<div class="fl"><p>服务电话：<b>33333333</b></p></div>
+					<!--登录后跳转-->
 
 
-                </div>
-            </div>
+                        <a style="color:white" class="fr registerbtn" href="{% url 'register' %}">注册</a>
+                        <a style="color:white" class="fr loginbtn" href="{% url 'login' %}">登录</a>
+
+
+
+				</div>
+                {% endif %}
+
+			</div>
 
     <div class="middle">
         <div class="wp">
@@ -76,13 +80,17 @@
 <section>
     <div class="wp list personal_list">
     <div class="left">
-       <ul>
-            <li {% ifequal  '/users/info/' request.path %}class="active2"{% endifequal %}><a href="{% url 'users:user_info' %}">个人资料</a></li>
-            <li {% ifequal  '/users/mycourse/' request.path %}class="active2"{% endifequal %}><a href="#">我的课程</a></li>
-            <li {% ifequal  '/users/myfav/' request.path|slice:'13' %}class="active2"{% endifequal %}><a href="#">我的收藏</a></li>
-            <li {% ifequal  '/users/my_message/' request.path %}class="active2"{% endifequal %}><a href="#" style="position: relative;">我的消息</a></li>
+        <ul>
+            <li {% ifequal  '/users/info/' request.path %} class="active2"{% endifequal %}><a href="{% url 'users:user_info' %}">个人资料</a></li>
+            <li {% ifequal  '/users/mycourse/' request.path %} class="active2"{% endifequal %}><a href="{% url 'users:mycourse' %}">我的课程</a></li>
+            <li {% ifequal  '/users/myfav/' request.path|slice:'13' %}class="active2"{% endifequal %}><a href="{% url 'users:myfav_org' %}">我的收藏</a></li>
+            <li {% ifequal  '/users/my_message/' request.path %}class="active2"{% endifequal %}>
+                <a href="{% url 'users:my_message' %}" style="position: relative;">
+                    我的消息
+                </a>
+            </li>
         </ul>
-    </div>
+        </div>
 
     {% block custom_right_content %}
     {% endblock %}
@@ -140,7 +148,7 @@
                 <div class="button">
                     <input id="jsResetPwdBtn" type="button" value="提交" />
                 </div>
-                                   {% csrf_token %}
+               {% csrf_token %}
             </form>
         </div>
     </div>
@@ -242,7 +250,7 @@
     $('.jsDeleteFav_course').on('click', function(){
         var _this = $(this),
             favid = _this.attr('data-favid');
-        alert(favid)
+        alert(favid);
         $.ajax({
                 cache: false,
                 type: "POST",

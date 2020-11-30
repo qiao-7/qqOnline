@@ -18,13 +18,14 @@ from django.urls import path,include,re_path
 from django.views.static import serve
 from qqOnline.settings import MEDIA_ROOT
 from django.views.generic import TemplateView
-from users.views import LoginView,RegisterView,LogoutView,ActiveUserView,ForgetPwdView,ResetView,ModifyPwdView
+from users.views import LoginView,RegisterView,LogoutView,ActiveUserView,ForgetPwdView,ResetView,ModifyPwdView,IndexView
 
 urlpatterns = [
     path('xadmin/', xadmin.site.urls),
     #文件
     path("media/<path:path>",serve,{"document_root":MEDIA_ROOT}),
-    path('',TemplateView.as_view(template_name='index.html'),name="index"),
+    # path('',TemplateView.as_view(template_name='index.html'),name="index"),
+    path('',IndexView.as_view(),name="index"),
     path("ueditor/",include('DjangoUeditor.urls')),
     path('captcha/', include('captcha.urls')),
     path('login/',LoginView.as_view(),name='login'),
@@ -38,4 +39,10 @@ urlpatterns = [
     path('course/',include('course.urls',namespace='course')),
     path("users/", include('users.urls', namespace="users")),
 
+
+
 ]
+# # 全局404页面配置
+# handler404 = 'users.views.pag_not_found'
+# # 全局500页面配置
+# handler500 = 'users.views.page_error'

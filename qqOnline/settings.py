@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'qqOnline.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME':'qq_online',
+        'NAME':'q_online',
         'USER':'root',
         'PASSWORD':'root',
         'HOST':'127.0.0.1',

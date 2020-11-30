@@ -163,6 +163,7 @@ $(function() {
             dataType:'json',
             url:"/users/info/",
             data:$jsEditUserForm.serialize(),
+
             async: true,
             beforeSend:function(XMLHttpRequest){
                 _self.val("保存中...");

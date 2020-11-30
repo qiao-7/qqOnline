@@ -9,7 +9,7 @@
         <div class="wp">
             <ul  class="crumbs">
                 <li><a href="{% url 'index' %}">首页</a>></li>
-                <li><a href="/user/home/">个人中心</a>></li>
+                <li><a href="{% url 'users:user_info' %}">个人中心</a>></li>
                 <li>个人信息</li>
             </ul>
         </div>
@@ -45,7 +45,7 @@
                         <a class="button btn-green btn-w100" id="jsUserResetPwd" style="margin:80px auto;width:100px;">修改密码</a>
                     </div>
 				</div>
-				<form class="perinform" id="jsEditUserForm" autocomplete="off">
+				<form class="perinform" id="jsEditUserForm" autocomplete="off" method="get" >
                 {% csrf_token %}
 					<ul class="right">
 				   <li>昵&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;称：
@@ -75,7 +75,6 @@
                             <input type="button" id="jsEditUserBtn" value="保存">
                         </li>
 					</ul>
-                    <input type='hidden' name='csrfmiddlewaretoken' value='799Y6iPeEDNSGvrTu3noBrO4MBLv6enY' />
 				</form>
 			</div>
 		</div>
